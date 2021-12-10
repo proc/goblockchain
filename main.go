@@ -11,6 +11,7 @@ import (
 type Block struct {
 	PreviousHash []byte
 	NextHash string
+	SequenceNumber int
 	Hash []byte
 	Data []byte
 }
@@ -26,12 +27,17 @@ func (b *Block) GenerateHash() []byte {
 	if err != nil {
 		panic(err)
 	}
-	data := fmt.Sprintf("%s%s", b.Data, nonce.String())
+	data := fmt.Sprintf("%s%s", b.Header(), nonce.String())
 	fmt.Println("Generating hash with data: ", data)
 	h.Write([]byte(data))
 	b.Hash = h.Sum(nil)
 
 	return b.Hash
+}
+
+func (b Block) Header() string {
+	// fmt.Printf("previous hash %s\n", b.PreviousHash)
+	return fmt.Sprintf("%s%x", b.Data, b.PreviousHash)
 }
 
 func (b Block) HashString() string {
@@ -42,8 +48,6 @@ func NewBlock(data []byte) *Block {
 	block := &Block{
 		Data: data,
 	}
-	hash := block.GenerateHash()
-	fmt.Println("New Block created: ", fmt.Sprintf("%x", hash))
 	return block
 }
 
@@ -67,8 +71,10 @@ func NewBlockChain() *BlockChain {
 	}
 }
 func (bc *BlockChain) AddBlock(b *Block) error {
-	fmt.Printf("Adding Block: %x\n", b.Hash)
 	b.PreviousHash = bc.Last.Hash
+	b.SequenceNumber = len(bc.Blocks)
+	b.GenerateHash()
+	fmt.Printf("Adding Block Number: %d\n", b.SequenceNumber)
 	bc.Last = b
 	bc.Blocks[b.HashString()] = b
 
@@ -94,12 +100,29 @@ func main() {
 	blockChain := NewBlockChain()
 	fmt.Printf("Genesis block created: %x\n", blockChain.Genesis.Hash)
 
-	blockChain.AddBlock(NewBlock([]byte("just some random data")))
-	blockChain.AddBlock(NewBlock([]byte("just another block")))
-	blockChain.AddBlock(NewBlock([]byte("2 + 2 = 4")))
-	blockChain.AddBlock(NewBlock([]byte("snack snack")))
-	blockChain.AddBlock(NewBlock([]byte("esper")))
-	blockChain.AddBlock(NewBlock([]byte("bing")))
-
+	err := blockChain.AddBlock(NewBlock([]byte("just some random data")))
+	if err != nil {
+		panic(err)
+	}
+	err = blockChain.AddBlock(NewBlock([]byte("just another block")))
+	if err != nil {
+		panic(err)
+	}
+	err = blockChain.AddBlock(NewBlock([]byte("2 + 2 = 4")))
+	if err != nil {
+		panic(err)
+	}
+	err = blockChain.AddBlock(NewBlock([]byte("snack snack")))
+	if err != nil {
+		panic(err)
+	}
+	err = blockChain.AddBlock(NewBlock([]byte("esper")))
+	if err != nil {
+		panic(err)
+	}
+	err = blockChain.AddBlock(NewBlock([]byte("bing")))
+	if err != nil {
+		panic(err)
+	}
 	blockChain.Print()
 }
